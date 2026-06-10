@@ -23,11 +23,13 @@
 - **Commerce** — custom Shopify & headless · Stripe payments
 - **POS integrations** — Square, Toast, Clover
 - **AI & computer vision** — facial recognition, liveness / anti-spoofing, on-device inference
+- **Games** — original games built in Godot
 
 ### Products
 
 - **[Keepfork](https://keepfork.app)** — a white-label ordering platform that gives restaurants
   and retailers their own branded storefront, without the 15–30% fees. _In development._
+- **Stillworld** — an original game built in Godot. _In development._
 - …plus general software and client work. More in the works.
 
 ### Toolkit
@@ -36,6 +38,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-fafafa?style=flat&logo=nextdotjs&logoColor=0a0a0b)
 ![NestJS](https://img.shields.io/badge/NestJS-22d3ee?style=flat&logo=nestjs&logoColor=0a0a0b)
 ![Flutter](https://img.shields.io/badge/Flutter-fafafa?style=flat&logo=flutter&logoColor=0a0a0b)
+![Godot](https://img.shields.io/badge/Godot-22d3ee?style=flat&logo=godotengine&logoColor=0a0a0b)
 ![Astro](https://img.shields.io/badge/Astro-22d3ee?style=flat&logo=astro&logoColor=0a0a0b)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-fafafa?style=flat&logo=postgresql&logoColor=0a0a0b)
 ![Stripe](https://img.shields.io/badge/Stripe-22d3ee?style=flat&logo=stripe&logoColor=0a0a0b)
