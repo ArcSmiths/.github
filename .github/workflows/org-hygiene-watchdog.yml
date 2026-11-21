@@ -21,6 +21,7 @@ jobs:
 
           targets = [
               ("arcsmiths", "https://arcsmiths.com/__release.json"),
+              ("itsdote", "https://itsdote.com/__release.json"),
               ("arcbay-www", "https://arcbay.app/__release.json"),
               ("keepfork", "https://keepfork.com/__release.json"),
               ("aeldrath", "https://aeldrath.com/__release.json"),
