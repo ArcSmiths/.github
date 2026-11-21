@@ -1,0 +1,43 @@
+name: Reusable Deno Edge Functions CI
+
+on:
+  workflow_call:
+    inputs:
+      functions-glob:
+        description: Glob pattern for Deno entrypoints
+        type: string
+        default: 'supabase/functions/*/index.ts'
+      test-paths:
+        description: Space-separated test directories for deno test
+        type: string
+        default: ''
+      runner:
+        description: JSON runner label spec
+        type: string
+        default: '["self-hosted","linux","x64","arcsmiths-ci"]'
+
+permissions:
+  contents: read
+
+jobs:
+  deno-check:
+    name: deno-functions
+    runs-on: ${{ fromJSON(inputs.runner) }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check Deno entrypoints
+        run: |
+          fail=0
+          for f in ${{ inputs.functions-glob }}; do
+            [ -f "$f" ] || continue
+            echo "Checking $f"
+            deno check --node-modules-dir=auto "$f" || fail=1
+          done
+          exit $fail
+      - name: Run Deno unit tests
+        if: inputs.test-paths != ''
+        run: deno test --node-modules-dir=auto ${{ inputs.test-paths }}

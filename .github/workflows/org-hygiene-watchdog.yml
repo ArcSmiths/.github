@@ -1,0 +1,49 @@
+name: Org Hygiene & Deploy Drift Watchdog
+
+on:
+  schedule:
+    - cron: '17 15 * * *' # Daily 07:17 PST / 08:17 PDT
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Audit ArcSmiths repos & live stamps
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check live __release.json drift across production hosts
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+
+          # Public production endpoints carrying __release.json once deployed
+          targets = [
+              ("arcsmiths", "https://arcsmiths.com/__release.json"),
+              ("arcbay-app", "https://app.arcbay.app/__release.json"),
+              ("magnolia", "https://magnoliacarwashsantee.com/__release.json"),
+              ("mariam-mechael", "https://mariammechael.com/__release.json"),
+              ("mercado-shores", "https://mercadoshoresliquor.com/__release.json"),
+              ("align", "https://alignhairstudio.com/__release.json"),
+              ("mp-snacks", "https://mpsnacks.com/__release.json"),
+              ("mp-wholesale", "https://mpwholesale.net/__release.json"),
+          ]
+          lines = ["## Live Release Stamp Audit", "", "| Site | Status | Commit | Deployed At |", "| :--- | :--- | :--- | :--- |"]
+          for name, url in targets:
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "ArcSmiths-Watchdog/1.0"})
+                  with urllib.request.urlopen(req, timeout=8) as r:
+                      data = json.loads(r.read().decode())
+                      sha = (data.get("commit") or "?")[:10]
+                      ts = data.get("deployedAt") or "?"
+                      lines.append(f"| `{name}` | ✅ stamped | `{sha}` | {ts} |")
+              except Exception as e:
+                  lines.append(f"| `{name}` | ⏳ pending first CI stamp | — | `{type(e).__name__}` |")
+          summary = "\n".join(lines) + "\n"
+          print(summary)
+          sp = os.environ.get("GITHUB_STEP_SUMMARY")
+          if sp:
+              open(sp, "a").write(summary)
+          PY
