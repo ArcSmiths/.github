@@ -12,9 +12,9 @@ on:
         type: string
         default: ''
       runner:
-        description: JSON runner label spec
+        description: JSON runner label spec (defaults to GitHub-hosted ubuntu-latest)
         type: string
-        default: '["self-hosted","linux","x64","arcsmiths-ci"]'
+        default: '"ubuntu-latest"'
 
 permissions:
   contents: read
