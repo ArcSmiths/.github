@@ -48,9 +48,9 @@ on:
         type: string
         default: ''
       runner:
-        description: JSON runner label spec (defaults to self-hosted arcsmiths-ci)
+        description: JSON runner label spec (defaults to GitHub-hosted ubuntu-latest)
         type: string
-        default: '["self-hosted","linux","x64","arcsmiths-ci"]'
+        default: '"ubuntu-latest"'
     secrets:
       CLOUDFLARE_API_TOKEN:
         required: false
@@ -121,20 +121,26 @@ jobs:
           '
 
       - name: Deploy to Cloudflare Pages
-        if: inputs.deploy && github.ref == 'refs/heads/master' && secrets.CLOUDFLARE_API_TOKEN != ''
+        if: inputs.deploy && github.ref == 'refs/heads/master'
         working-directory: ${{ inputs.working-directory }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'e0296ccd090226cec02e729a888cee14' }}
+          SMOKE_URL: ${{ inputs.smoke-url }}
         run: |
-          npx --yes wrangler@4.166.0 pages deploy "${{ inputs.output-dir }}"             --project-name="${{ inputs.pages-project }}"             --branch="${{ inputs.pages-branch }}"             --commit-hash="${{ github.sha }}"
-
-      - name: Verify live __release.json after deploy
-        if: inputs.deploy && github.ref == 'refs/heads/master' && secrets.CLOUDFLARE_API_TOKEN != '' && inputs.smoke-url != ''
-        run: |
-          sleep 6
-          code=$(curl -s -o /dev/null -w '%{http_code}' "${{ inputs.smoke-url }}/")
-          test "$code" = "200" || { echo "::error::${{ inputs.smoke-url }}/ returned HTTP $code"; exit 1; }
-          live_sha=$(curl -fsSL "${{ inputs.smoke-url }}/__release.json" | node -e 'const d=JSON.parse(require("fs").readFileSync(0,"utf8")); console.log(d.commit||"")')
-          echo "Live SHA: $live_sha (expected ${{ github.sha }})"
-          test "$live_sha" = "${{ github.sha }}" || { echo "::error::Release SHA mismatch"; exit 1; }
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN not provided; skipping live deploy."
+            exit 0
+          fi
+          npx --yes wrangler@4.166.0 pages deploy "${{ inputs.output-dir }}" \
+            --project-name="${{ inputs.pages-project }}" \
+            --branch="${{ inputs.pages-branch }}" \
+            --commit-hash="${{ github.sha }}"
+          if [ -n "$SMOKE_URL" ]; then
+            sleep 6
+            code=$(curl -s -o /dev/null -w '%{http_code}' "${SMOKE_URL}/")
+            test "$code" = "200" || { echo "::error::${SMOKE_URL}/ returned HTTP $code"; exit 1; }
+            live_sha=$(curl -fsSL "${SMOKE_URL}/__release.json" | node -e 'const d=JSON.parse(require("fs").readFileSync(0,"utf8")); console.log(d.commit||"")')
+            echo "Live SHA: $live_sha (expected ${{ github.sha }})"
+            test "$live_sha" = "${{ github.sha }}" || { echo "::error::Release SHA mismatch"; exit 1; }
+          fi
